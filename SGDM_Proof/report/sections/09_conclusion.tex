@@ -1,0 +1,32 @@
+% ======================================================================
+\section{Conclusion}\label{sec:conclusion}
+% ======================================================================
+
+The standard analysis of SGD rests on a one-step expected decrease of the function value.
+For SGD with momentum the function value is the wrong yardstick, because momentum makes
+the iterates overshoot. The report's main message fits in three sentences.
+
+\begin{enumerate}
+\item \emph{SGDM is SGD on the extrapolated points.} The points
+  $z_k=x_k+\frac{\beta}{1-\beta}(x_k-x_{k-1})$, where the ball would come to rest if the
+  force were switched off, follow exact SGD steps $z_{k+1}=z_k-\gamma g_k$ with the effective
+  step size $\gamma=\alpha/(1-\beta)$; only the gradient is evaluated at the nearby point $x_k$
+  (\cref{lem:z}).
+\item \emph{A potential decreases in expectation, exactly as $f$ does for SGD.} The
+  potential $\Phi_k=f(z_k)-\fs+\frac{L\beta^2}{2(1-\beta)^2}\norm{x_k-x_{k-1}}^2$ satisfies
+  $\Ek\Phi_{k+1}\le\Phi_k-\frac\gamma4\norm{\nabla f(x_k)}^2+L\gamma^2\sigma^2$ whenever
+  $\alpha\le(1-\beta)^2/(2L)$: friction must dissipate kinetic energy faster than the gradient
+  mismatch creates error (\cref{thm:master}).
+\item \emph{Everything else follows as for SGD.} Telescoping gives the $O(1/\sqrt K)$
+  nonconvex rate, diminishing steps give asymptotic convergence, the PL inequality gives
+  linear convergence to a noise floor, and convexity relaxes the step-size condition to
+  $\gamma\le1/(2L)$ (\cref{sec:convergence}).
+\end{enumerate}
+
+As for \emph{when} convergence holds (\cref{sec:circumstances}): the momentum must satisfy
+$\beta<1$; the step size must be small in terms of the effective step $\gamma$, with a
+threshold that depends on the function class (\cref{fig:regions}); a constant step only
+reaches a noise floor of order $\gamma\sigma^2$, which is unavoidable and the same as for SGD
+(\cref{prop:noise-floor}); and stability or optimality on quadratics does not imply
+convergence on general functions (\cref{ex:lrp}). In the worst case, momentum neither
+accelerates nor slows down SGD once the step sizes are compared on the right scale.

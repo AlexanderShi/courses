@@ -1,0 +1,84 @@
+% ======================================================================
+\section{Linear recurrences and powers of \texorpdfstring{$2\times2$}{2x2} matrices}\label{app:linear}
+% ======================================================================
+
+These two standard facts are used in \cref{prop:noise-floor,prop:quadratic-stability}.
+
+\begin{lemma}[Second-order linear recurrences]\label{lem:recurrence}
+Let $a\in\R$, $b\ne0$, and let $\lambda_1,\lambda_2\in\mathbb C$ be the roots of
+$p(\lambda)=\lambda^2-a\lambda+b$. The solutions $(x_k)_{k\ge-1}$ of
+$x_{k+1}=ax_k-bx_{k-1}$ ($k\ge0$) are exactly the sequences
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item $x_k=c_1\lambda_1^k+c_2\lambda_2^k$ with $c_1,c_2\in\mathbb C$, if $\lambda_1\ne\lambda_2$;
+\item $x_k=(c_1+c_2k)\lambda_1^k$ with $c_1,c_2\in\mathbb C$, if $\lambda_1=\lambda_2$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\emph{These are solutions.} For a root $\lambda$,
+$\lambda^{k+1}-a\lambda^k+b\lambda^{k-1}=\lambda^{k-1}p(\lambda)=0$, and sums of solutions
+are solutions. In case (ii), $\lambda_1=a/2$ and $b=\lambda_1^2$ (product of the roots), and
+\[
+  (k+1)\lambda_1^{k+1}-ak\lambda_1^k+b(k-1)\lambda_1^{k-1}
+  =\lambda_1^{k-1}\bigl[k\,p(\lambda_1)+\lambda_1^2-b\bigr]=0 .
+\]
+\emph{There are no others.} A solution is determined by $(x_{-1},x_0)$, so it suffices to
+show that every pair $(x_{-1},x_0)$ is attained. In case (i) we need
+$c_1\lambda_1^{-1}+c_2\lambda_2^{-1}=x_{-1}$, $c_1+c_2=x_0$; the determinant of this linear
+system is $\lambda_2^{-1}-\lambda_1^{-1}=\frac{\lambda_1-\lambda_2}{\lambda_1\lambda_2}\ne0$
+(the roots are nonzero because $\lambda_1\lambda_2=b\ne0$). In case (ii) we need
+$(c_1-c_2)\lambda_1^{-1}=x_{-1}$ and $c_1=x_0$, which has the solution $c_1=x_0$,
+$c_2=x_0-\lambda_1x_{-1}$.
+\end{proof}
+
+When $b=\beta=0$ the heavy-ball recurrence reduces to $x_{k+1}=ax_k$, with solutions
+$x_k=a^kx_0$; the arguments of \cref{prop:quadratic-stability} apply verbatim with the roots
+$a$ and $0$.
+
+\begin{lemma}[Powers of a $2\times2$ matrix]\label{lem:matrix-powers}
+Let $M$ be a real $2\times2$ matrix whose eigenvalues satisfy
+$\max\{|\lambda_1|,|\lambda_2|\}<\rho<1$. Then there is a constant $C_M$ such that every entry
+of $M^k$ is at most $C_M\rho^k$ in absolute value, for all $k\ge0$. Consequently, for any
+$2\times2$ matrices $C_0,Q$, we have $M^kC_0(M^\top)^k\to0$, and the series
+$\sum_{j\ge0}M^jQ(M^\top)^j$ converges.
+\end{lemma}
+
+\begin{proof}
+If $\lambda_1\ne\lambda_2$, $M$ is diagonalizable over $\mathbb C$: $M=V\,\mathrm{diag}(\lambda_1,\lambda_2)V^{-1}$,
+so $M^k=V\,\mathrm{diag}(\lambda_1^k,\lambda_2^k)V^{-1}$ and its entries are bounded by a constant
+times $\max_i|\lambda_i|^k\le\rho^k$. If $\lambda_1=\lambda_2=\lambda$, then either
+$M=\lambda I$, or $M=VJV^{-1}$ with the Jordan block $J=\begin{pmatrix}\lambda&1\\0&\lambda\end{pmatrix}$,
+for which $J^k=\begin{pmatrix}\lambda^k&k\lambda^{k-1}\\0&\lambda^k\end{pmatrix}$; since
+$k|\lambda|^{k-1}/\rho^k\to0$, the entries of $M^k$ are again bounded by a constant times
+$\rho^k$. The entries of $M^jQ(M^\top)^j$ are then bounded by a constant times $\rho^{2j}$, so
+the series converges absolutely, and similarly $M^kC_0(M^\top)^k\to0$.
+\end{proof}
+
+% ======================================================================
+\section{Reproducing the figures}\label{app:reproduce}
+% ======================================================================
+
+The repository contains the \LaTeX{} source of this report (\texttt{report/}) and the
+Python code for all figures (\texttt{experiments/}, requiring \texttt{numpy} and
+\texttt{matplotlib}). From the repository root:
+\begin{verbatim}
+  pip install -r experiments/requirements.txt
+  python experiments/run_all.py          # regenerates report/figures/*.pdf
+  cd report && latexmk -pdf main.tex     # rebuilds the PDF
+\end{verbatim}
+or simply \texttt{make}. The scripts and the figures they produce are:
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+script & figure & content\\
+\midrule
+\texttt{potential.py} & \cref{fig:potential} & $f(x_k)$ versus $\Phi_k$; checks monotonicity of $\Phi_k$\\
+\texttt{regions.py} & \cref{fig:regions} & parameter regions\\
+\texttt{sgd\_vs\_sgdm.py} & \cref{fig:sgd-vs-sgdm} & SGD versus SGDM on (P3)\\
+\texttt{noise\_floor.py} & \cref{fig:noise-floor} & noise floor versus $\gamma$\\
+\texttt{diminishing.py} & \cref{fig:diminishing} & diminishing step sizes\\
+\texttt{counterexample.py} & \cref{fig:lrp} & the $3$-cycle of \cref{ex:lrp}, verified exactly\\
+\bottomrule
+\end{tabular}
+\end{center}
+All random seeds are fixed, so the figures are reproducible.
