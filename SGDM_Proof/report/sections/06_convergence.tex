@@ -1,0 +1,309 @@
+% ======================================================================
+\section{Convergence theorems for SGDM}\label{sec:convergence}
+% ======================================================================
+
+With \cref{thm:master} in hand, steps \textbf{(T2)}--\textbf{(T3)} of the template
+(\cref{sec:template}) go through essentially verbatim. Recall $\Dlt=f(x_0)-\fs$ and
+$\gamma=\alpha/(1-\beta)$.
+
+\subsection{Nonconvex functions, constant step size}
+
+\begin{tcolorbox}[keybox]
+\begin{theorem}[SGDM, nonconvex]\label{thm:nonconvex}
+Let \cref{as:smooth,as:lower,as:unbiased,as:variance} hold, $\beta\in[0,1)$ and
+$0<\alpha\le\frac{(1-\beta)^2}{2L}$. Then for every $K\ge1$,
+\begin{equation}\label{eq:nonconvex}
+  \frac1K\sum_{k=0}^{K-1}\E\norm{\nabla f(x_k)}^2\le\frac{4\Dlt}{\gamma K}+4L\gamma\sigma^2 .
+\end{equation}
+\end{theorem}
+\end{tcolorbox}
+
+\begin{proof}
+Drop the (non-positive) velocity term in \eqref{eq:master} and take full expectations
+(tower property \ref{R:tower}):
+$\E\Phi_{k+1}\le\E\Phi_k-\frac\gamma4\E\norm{\nabla f(x_k)}^2+L\gamma^2\sigma^2$.
+Summing over $k=0,\dots,K-1$, the potentials telescope:
+\[
+  \E\Phi_K\le\Phi_0-\frac\gamma4\sum_{k=0}^{K-1}\E\norm{\nabla f(x_k)}^2+KL\gamma^2\sigma^2 .
+\]
+Now $\Phi_0=f(z_0)-\fs+\cb\norm{v_0}^2=f(x_0)-\fs=\Dlt$ and $\E\Phi_K\ge0$. Rearranging,
+$\frac\gamma4\sum_{k<K}\E\norm{\nabla f(x_k)}^2\le\Dlt+KL\gamma^2\sigma^2$; divide by $\gamma K/4$.
+\end{proof}
+
+Since a minimum never exceeds an average, \eqref{eq:nonconvex} also bounds
+$\min_{k<K}\E\norm{\nabla f(x_k)}^2$. In practice one can output $x_R$ with $R$ drawn
+uniformly from $\{0,\dots,K-1\}$, independently of everything else; then
+$\E\norm{\nabla f(x_R)}^2$ equals the left-hand side of \eqref{eq:nonconvex}~\cite{ghadimilan2013}.
+
+\begin{corollary}[Step size and iteration complexity]\label{cor:rate}
+Under the assumptions of \cref{thm:nonconvex}, fix $K\ge1$ and choose
+\[
+  \gamma=\min\Bigl\{\frac{1-\beta}{2L},\;\frac1\sigma\sqrt{\frac{\Dlt}{LK}}\Bigr\}
+  \quad\Bigl(\gamma=\tfrac{1-\beta}{2L}\text{ if }\sigma=0\Bigr),
+  \qquad\alpha=(1-\beta)\gamma .
+\]
+Then
+\begin{equation}\label{eq:rate}
+  \frac1K\sum_{k=0}^{K-1}\E\norm{\nabla f(x_k)}^2\le\frac{8L\Dlt}{(1-\beta)K}+8\sigma\sqrt{\frac{L\Dlt}{K}} .
+\end{equation}
+Consequently $\min_{k<K}\E\norm{\nabla f(x_k)}^2\le\eps^2$ as soon as
+$K\ge\max\bigl\{\frac{16L\Dlt}{(1-\beta)\eps^2},\,\frac{256L\Dlt\sigma^2}{\eps^4}\bigr\}$.
+\end{corollary}
+
+\begin{proof}
+The chosen $\gamma$ satisfies $L\gamma\le\frac{1-\beta}2$, so \cref{thm:nonconvex}
+applies. Using $\frac{1}{\min\{a,b\}}\le\frac1a+\frac1b$ for $a,b>0$,
+\[
+  \frac{4\Dlt}{\gamma K}\le\frac{4\Dlt}{K}\Bigl(\frac{2L}{1-\beta}+\sigma\sqrt{\frac{LK}{\Dlt}}\Bigr)
+  =\frac{8L\Dlt}{(1-\beta)K}+4\sigma\sqrt{\frac{L\Dlt}{K}},
+  \qquad
+  4L\gamma\sigma^2\le4L\sigma^2\cdot\frac1\sigma\sqrt{\frac{\Dlt}{LK}}=4\sigma\sqrt{\frac{L\Dlt}{K}} .
+\]
+Adding gives \eqref{eq:rate}. For the complexity statement, each of the two terms in
+\eqref{eq:rate} is at most $\eps^2/2$ under the stated condition on $K$.
+\end{proof}
+
+\paragraph{Comparison with SGD.} For SGD the analogous choice gives
+$\frac{2L\Dlt}{K}+2\sigma\sqrt{\frac{2L\Dlt}{K}}$ (\cref{sec:sgd}). The dominant term for
+large $K$ (or small $\eps$), of order $\sigma\sqrt{L\Dlt/K}$, is the same for SGD and SGDM
+up to a constant: \emph{in the worst case momentum neither improves nor degrades the
+asymptotic rate.} Momentum costs a factor $1/(1-\beta)$ in the noise-free term, which
+reflects the more conservative step-size condition.
+
+\begin{corollary}[Exact gradients]\label{cor:deterministic}
+Let \cref{as:smooth,as:lower} hold, $\sigma=0$ (that is, $g_k=\nabla f(x_k)$), $\beta\in[0,1)$
+and $\alpha=\frac{(1-\beta)^2}{2L}$. Then
+\begin{enumerate}[label=\textup{(\roman*)}]
+\item $\Phi_{k+1}\le\Phi_k$ for all $k$, and $f(x_k)\le\fs+2\Dlt$ for all $k$;
+\item $\sum_{k=0}^\infty\norm{\nabla f(x_k)}^2\le\frac{8L\Dlt}{1-\beta}$; in particular $\nabla f(x_k)\to0$;
+\item $\min_{0\le k<K}\norm{\nabla f(x_k)}^2\le\frac{8L\Dlt}{(1-\beta)K}$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+Without noise everything is deterministic, and \eqref{eq:master} with
+$\gamma=\frac{1-\beta}{2L}$ reads $\Phi_{k+1}\le\Phi_k-\frac\gamma4\norm{\nabla f(x_k)}^2$.
+(i) follows, together with $f(x_k)-\fs\le2\Phi_k\le2\Phi_0=2\Dlt$
+(\cref{lem:phi-controls-f}). (ii) Summing, $\frac\gamma4\sum_{k<K}\norm{\nabla f(x_k)}^2\le\Phi_0-\Phi_K\le\Dlt$
+for every $K$, so the series converges with sum at most $4\Dlt/\gamma=8L\Dlt/(1-\beta)$, and its
+terms tend to zero. (iii) The minimum is at most the average, $\frac1K\cdot\frac{8L\Dlt}{1-\beta}$.
+\end{proof}
+
+\subsection{Nonconvex functions, diminishing step sizes}
+
+\begin{theorem}[SGDM with diminishing steps]\label{thm:diminishing}
+Let \cref{as:smooth,as:lower,as:unbiased,as:variance} hold and $\beta\in[0,1)$. Run
+Algorithm~1 in heavy-ball form with step size $\alpha_k$ at iteration $k$,
+$x_{k+1}=x_k-\alpha_kg_k+\beta(x_k-x_{k-1})$, where $\gamma_k:=\alpha_k/(1-\beta)$ satisfies
+$0<\gamma_k\le\frac{1-\beta}{2L}$ for all $k$. Then for every $K\ge1$,
+\begin{equation}\label{eq:diminishing}
+  \sum_{k=0}^{K-1}\gamma_k\,\E\norm{\nabla f(x_k)}^2\le4\Dlt+4L\sigma^2\sum_{k=0}^{K-1}\gamma_k^2 .
+\end{equation}
+Consequently:
+\begin{enumerate}[label=\textup{(\alph*)}]
+\item $\displaystyle\min_{0\le k<K}\E\norm{\nabla f(x_k)}^2\le
+       \frac{4\Dlt+4L\sigma^2\sum_{k<K}\gamma_k^2}{\sum_{k<K}\gamma_k}$.
+\item \emph{(Robbins--Monro steps.)} If $\sum_k\gamma_k=\infty$ and $\sum_k\gamma_k^2<\infty$,
+  then $\min_{k<K}\E\norm{\nabla f(x_k)}^2\to0$ as $K\to\infty$ and
+  $\liminf_{k\to\infty}\E\norm{\nabla f(x_k)}^2=0$. Moreover, with probability one,
+  $\sum_k\gamma_k\norm{\nabla f(x_k)}^2<\infty$ and $\liminf_{k\to\infty}\norm{\nabla f(x_k)}=0$.
+\item If $\gamma_k=\gamma_0/\sqrt{k+1}$ with $\gamma_0\le\frac{1-\beta}{2L}$, then
+  $\displaystyle\min_{0\le k<K}\E\norm{\nabla f(x_k)}^2\le\frac{4\Dlt+4L\sigma^2\gamma_0^2(1+\ln K)}{\gamma_0\sqrt K}
+  =O\Bigl(\frac{\log K}{\sqrt K}\Bigr)$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+By \cref{rem:extensions}(i), inequality \eqref{eq:master} holds at every iteration with
+$\gamma_k$: $\Ek\Phi_{k+1}\le\Phi_k-\frac{\gamma_k}4\norm{\nabla f(x_k)}^2+L\gamma_k^2\sigma^2$.
+Taking expectations, summing over $k<K$, and using $\Phi_0=\Dlt$ and $\E\Phi_K\ge0$ gives
+$\frac14\sum_{k<K}\gamma_k\E\norm{\nabla f(x_k)}^2\le\Dlt+L\sigma^2\sum_{k<K}\gamma_k^2$,
+which is \eqref{eq:diminishing}.
+
+(a) The left side of \eqref{eq:diminishing} is at least
+$\bigl(\min_{k<K}\E\norm{\nabla f(x_k)}^2\bigr)\sum_{k<K}\gamma_k$.
+
+(b) Let $C:=4\Dlt+4L\sigma^2\sum_{k=0}^\infty\gamma_k^2<\infty$. By (a),
+$\min_{k<K}\E\norm{\nabla f(x_k)}^2\le C/\sum_{k<K}\gamma_k\to0$. If
+$\liminf_k\E\norm{\nabla f(x_k)}^2$ were positive, there would be $\eps>0$ and $k_0$ with
+$\E\norm{\nabla f(x_k)}^2\ge\eps$ for all $k\ge k_0$, and then the left side of
+\eqref{eq:diminishing} would be at least $\eps\sum_{k_0\le k<K}\gamma_k\to\infty$,
+contradicting the bound $C$. For the almost-sure statement, the random variables
+$S_K:=\sum_{k<K}\gamma_k\norm{\nabla f(x_k)}^2$ are non-negative and non-decreasing in
+$K$, so $S_\infty:=\lim_KS_K\in[0,\infty]$ exists, and by the monotone convergence
+theorem $\E S_\infty=\lim_K\E S_K\le C<\infty$. A non-negative random variable with finite
+expectation is finite with probability one, so $S_\infty<\infty$ almost surely. On this
+event $\liminf_k\norm{\nabla f(x_k)}=0$: otherwise $\norm{\nabla f(x_k)}^2\ge\eps$ for some
+$\eps>0$ and all large $k$, which would force $S_\infty=\infty$ because $\sum_k\gamma_k=\infty$.
+
+(c) $\sum_{k<K}\gamma_k=\gamma_0\sum_{j=1}^Kj^{-1/2}\ge\gamma_0\sqrt K$, since each of the
+$K$ terms is at least $K^{-1/2}$; and
+$\sum_{k<K}\gamma_k^2=\gamma_0^2\sum_{j=1}^K\frac1j\le\gamma_0^2\bigl(1+\int_1^K\frac{dt}{t}\bigr)=\gamma_0^2(1+\ln K)$.
+Insert both into (a).
+\end{proof}
+
+Step sizes such as $\gamma_k=\gamma_0/(k+1)^{0.6}$ satisfy the Robbins--Monro
+conditions~\cite{robbins1951}. Stronger almost-sure statements (a limit rather than a
+$\liminf$) are known for SGD~\cite{bertsekas2000} and for the stochastic heavy-ball
+method~\cite{gadat2018,sebbouh2021}; they require more advanced martingale tools such as
+the Robbins--Siegmund theorem~\cite{robbinssiegmund1971}.
+
+\subsection{Functions satisfying the PL inequality}
+
+\begin{lemma}\label{lem:phi-pl}
+Under \cref{as:smooth,as:lower} and the PL inequality \eqref{eq:pl}, the SGDM iterates satisfy
+\[
+  \Phi_k\le\frac1\mu\norm{\nabla f(x_k)}^2+3\cb\norm{x_k-x_{k-1}}^2\qquad\text{for all }k\ge0.
+\]
+\end{lemma}
+
+\begin{proof}
+If $\nabla f\equiv0$ then $f$ is constant, $\Phi_k=\cb\norm{v_k}^2$, and there is nothing to
+prove; otherwise $\mu\le L$ by \cref{lem:pl-facts}(b). Write
+$f(z_k)-\fs=\bigl(f(z_k)-f(x_k)\bigr)+\bigl(f(x_k)-\fs\bigr)$. By the descent lemma and Young's
+inequality with $\rho=1/L$,
+$f(z_k)-f(x_k)\le\ip{\nabla f(x_k)}{z_k-x_k}+\frac L2\norm{z_k-x_k}^2
+\le\frac1{2L}\norm{\nabla f(x_k)}^2+L\norm{z_k-x_k}^2$, and by PL,
+$f(x_k)-\fs\le\frac1{2\mu}\norm{\nabla f(x_k)}^2$. Since $\frac1{2L}+\frac1{2\mu}\le\frac1\mu$
+and $L\norm{z_k-x_k}^2=2\cb\norm{v_k}^2$ (see the proof of \cref{lem:phi-controls-f}),
+$f(z_k)-\fs\le\frac1\mu\norm{\nabla f(x_k)}^2+2\cb\norm{v_k}^2$. Add $\cb\norm{v_k}^2$.
+\end{proof}
+
+\begin{tcolorbox}[keybox]
+\begin{theorem}[SGDM under the PL inequality]\label{thm:pl}
+Let \cref{as:smooth,as:lower,as:unbiased,as:variance} and the PL inequality \eqref{eq:pl}
+hold, $\beta\in[0,1)$ and $0<\alpha\le\frac{(1-\beta)^2}{2L}$. Then for all $k\ge0$,
+\[
+  \E\Phi_k\le\Bigl(1-\frac{\gamma\mu}{4}\Bigr)^k\Dlt+\frac{4L\gamma\sigma^2}{\mu},
+  \qquad
+  \E f(x_k)-\fs\le2\Bigl(1-\frac{\gamma\mu}{4}\Bigr)^k\Dlt+\frac{8L\gamma\sigma^2}{\mu}.
+\]
+\end{theorem}
+\end{tcolorbox}
+
+\begin{proof}
+Since $\frac{L\beta^2}{4(1-\beta)}=\frac{\cb(1-\beta)}{2}$, \eqref{eq:master} reads
+\[
+  \Ek\Phi_{k+1}\le\Phi_k-\Bigl[\frac\gamma4\norm{\nabla f(x_k)}^2+\frac{\cb(1-\beta)}{2}\norm{v_k}^2\Bigr]
+  +L\gamma^2\sigma^2 .
+\]
+By \cref{lem:phi-pl}, $\frac{\gamma\mu}{4}\Phi_k\le\frac\gamma4\norm{\nabla f(x_k)}^2+\frac{3\gamma\mu}{4}\cb\norm{v_k}^2$,
+and $\frac{3\gamma\mu}{4}\cb\le\frac{\cb(1-\beta)}{2}$ because
+$\gamma\mu\le\gamma L\le\frac{1-\beta}{2}\le\frac{2(1-\beta)}{3}$. Hence the bracket is at
+least $\frac{\gamma\mu}4\Phi_k$, and
+\begin{equation}\label{eq:pl-contraction}
+  \Ek\Phi_{k+1}\le\Bigl(1-\frac{\gamma\mu}4\Bigr)\Phi_k+L\gamma^2\sigma^2 .
+\end{equation}
+Note $0<\frac{\gamma\mu}{4}\le\frac18$. Taking expectations and unrolling as in the proof of
+\cref{thm:sgd-pl},
+$\E\Phi_k\le(1-\frac{\gamma\mu}4)^k\Phi_0+L\gamma^2\sigma^2\sum_{j<k}(1-\frac{\gamma\mu}4)^j
+\le(1-\frac{\gamma\mu}4)^k\Dlt+L\gamma^2\sigma^2\cdot\frac4{\gamma\mu}$. The bound on
+$f(x_k)$ follows from $f(x_k)-\fs\le2\Phi_k$ (\cref{lem:phi-controls-f}).
+\end{proof}
+
+Compared with SGD (\cref{thm:sgd-pl}: contraction $1-\alpha\mu$, floor
+$\frac{L\alpha\sigma^2}{2\mu}$), the statement has the same form with $\alpha$ replaced by
+$\gamma$ and worse constants. With the largest admissible step,
+$\gamma=\frac{1-\beta}{2L}$, the contraction factor is $1-\frac{(1-\beta)\mu}{8L}$: \emph{in
+this worst-case analysis momentum does not accelerate} (see \cref{sec:momentum-help}).
+
+\begin{corollary}[PL inequality, decreasing steps]\label{cor:pl-decay}
+Under the assumptions of \cref{thm:pl} (except for the step size), run Algorithm~1 in
+heavy-ball form with $\gamma_k=\frac{8}{\mu(k+a)}$, $\alpha_k=(1-\beta)\gamma_k$, where
+$a\ge\frac{16L}{\mu(1-\beta)}$. Then for all $k\ge0$,
+\[
+  \E\Phi_k\le\frac{\nu}{k+a},\qquad\E f(x_k)-\fs\le\frac{2\nu}{k+a},\qquad
+  \nu:=\max\Bigl\{a\Dlt,\;\frac{64L\sigma^2}{\mu^2}\Bigr\}.
+\]
+\end{corollary}
+
+\begin{proof}
+Since $\gamma_k\le\gamma_0=\frac{8}{\mu a}\le\frac{1-\beta}{2L}$, the one-step contraction
+\eqref{eq:pl-contraction} holds at every iteration with $\gamma_k$ (its proof uses only
+\eqref{eq:master} at iteration $k$, valid by \cref{rem:extensions}(i), and
+\cref{lem:phi-pl}). With $e_k:=\E\Phi_k$ and $\frac{\gamma_k\mu}{4}=\frac2{k+a}$,
+\[
+  e_{k+1}\le\Bigl(1-\frac{2}{k+a}\Bigr)e_k+\frac{64L\sigma^2}{\mu^2(k+a)^2}.
+\]
+We show $e_k\le\nu/(k+a)$ by induction. For $k=0$, $e_0=\Dlt\le\nu/a$. If
+$e_k\le\nu/(k+a)$, then, because $1-\frac2{k+a}\ge0$ (note $a\ge16$) and
+$\frac{64L\sigma^2}{\mu^2}\le\nu$,
+\[
+  e_{k+1}\le\frac{(k+a-2)\,\nu}{(k+a)^2}+\frac{\nu}{(k+a)^2}=\frac{(k+a-1)\,\nu}{(k+a)^2}\le\frac{\nu}{k+a+1},
+\]
+where the last step uses $(k+a-1)(k+a+1)=(k+a)^2-1\le(k+a)^2$. The bound on $f(x_k)$ follows
+from \cref{lem:phi-controls-f}.
+\end{proof}
+
+\subsection{Convex functions}
+
+For convex functions a different potential---a distance to the minimizer, as in the
+classical convex analysis of SGD---gives a guarantee under a step-size condition that
+does not degrade as $\beta\to1$.
+
+\begin{tcolorbox}[keybox]
+\begin{theorem}[SGDM, convex]\label{thm:convex}
+Let \cref{as:smooth,as:unbiased,as:variance} hold, let $f$ be convex with a minimizer
+$x^\star$ (so $\fs=f(x^\star)$), $\beta\in[0,1)$, and $0<\alpha\le\frac{1-\beta}{2L}$, i.e.\
+$L\gamma\le\frac12$. Define
+\[
+  \Psi_k:=\norm{z_k-x^\star}^2+\frac{2\gamma\beta}{1-\beta}\bigl(f(x_{k-1})-\fs\bigr)\;\ge0 .
+\]
+\begin{enumerate}[label=\textup{(\alph*)}]
+\item For every $k\ge0$:
+  $\Ek\Psi_{k+1}\le\Psi_k-2\gamma(1-L\gamma)\bigl(f(x_k)-\fs\bigr)+\gamma^2\sigma^2
+  \le\Psi_k-\gamma\bigl(f(x_k)-\fs\bigr)+\gamma^2\sigma^2$.
+\item For every $K\ge1$, with $\bar x_K:=\frac1K\sum_{k<K}x_k$,
+  \[
+    \E f(\bar x_K)-\fs\le\frac1K\sum_{k=0}^{K-1}\bigl(\E f(x_k)-\fs\bigr)
+    \le\frac{\norm{x_0-x^\star}^2}{\gamma K}+\frac{2\beta\Dlt}{(1-\beta)K}+\gamma\sigma^2 .
+  \]
+\item With $D:=\norm{x_0-x^\star}$ and $\gamma=\min\{\frac1{2L},\frac{D}{\sigma\sqrt K}\}$:
+  $\E f(\bar x_K)-\fs\le\frac{2LD^2}{K}+\frac{2\beta\Dlt}{(1-\beta)K}+\frac{2\sigma D}{\sqrt K}$.
+\end{enumerate}
+\end{theorem}
+\end{tcolorbox}
+
+\begin{proof}
+(a) By \cref{lem:z}, $z_{k+1}-x^\star=(z_k-x^\star)-\gamma g_k$, hence
+$\norm{z_{k+1}-x^\star}^2=\norm{z_k-x^\star}^2-2\gamma\ip{g_k}{z_k-x^\star}+\gamma^2\norm{g_k}^2$.
+Taking $\Ek$ ($z_k$ is known at time $k$; \cref{as:unbiased}; \cref{lem:variance}):
+\[
+  \Ek\norm{z_{k+1}-x^\star}^2\le\norm{z_k-x^\star}^2-2\gamma\ip{\nabla f(x_k)}{z_k-x^\star}
+  +\gamma^2\bigl(\norm{\nabla f(x_k)}^2+\sigma^2\bigr).
+\]
+Split $z_k-x^\star=(x_k-x^\star)+\frac{\beta}{1-\beta}(x_k-x_{k-1})$ and use convexity
+(\cref{def:convex}) twice: with $y=x^\star$,
+$\ip{\nabla f(x_k)}{x_k-x^\star}\ge f(x_k)-\fs$; with $y=x_{k-1}$,
+$\ip{\nabla f(x_k)}{x_k-x_{k-1}}\ge f(x_k)-f(x_{k-1})$. Together with
+$\norm{\nabla f(x_k)}^2\le2L(f(x_k)-\fs)$ (\cref{lem:grad-gap}) this yields
+\[
+  \Ek\norm{z_{k+1}-x^\star}^2\le\norm{z_k-x^\star}^2-2\gamma(1-L\gamma)\bigl(f(x_k)-\fs\bigr)
+  +\frac{2\gamma\beta}{1-\beta}\bigl(f(x_{k-1})-f(x_k)\bigr)+\gamma^2\sigma^2 .
+\]
+Add $\frac{2\gamma\beta}{1-\beta}(f(x_k)-\fs)$, which is known at time $k$, to both
+sides. The left side becomes $\Ek\Psi_{k+1}$ and the right side becomes
+$\Psi_k-2\gamma(1-L\gamma)(f(x_k)-\fs)+\gamma^2\sigma^2$. Finally $L\gamma\le\frac12$ gives
+$2\gamma(1-L\gamma)\ge\gamma$.
+
+(b) Take expectations in (a) and sum over $k<K$:
+$\E\Psi_K\le\Psi_0-\gamma\sum_{k<K}(\E f(x_k)-\fs)+K\gamma^2\sigma^2$, where
+$\Psi_0=\norm{x_0-x^\star}^2+\frac{2\gamma\beta}{1-\beta}\Dlt$ (recall $z_0=x_0=x_{-1}$) and
+$\E\Psi_K\ge0$. Rearrange and divide by $\gamma K$. The first inequality is Jensen's
+inequality: by convexity, $f(x_k)\ge f(\bar x_K)+\ip{\nabla f(\bar x_K)}{x_k-\bar x_K}$
+for each $k$, and averaging over $k$ the inner products cancel.
+
+(c) As in \cref{cor:rate}: $\frac{D^2}{\gamma K}\le\frac{D^2}{K}\bigl(2L+\frac{\sigma\sqrt K}{D}\bigr)$ and
+$\gamma\sigma^2\le\frac{\sigma D}{\sqrt K}$.
+\end{proof}
+
+\begin{remark}[Why convexity relaxes the step-size condition]
+In the convex case the step-size restriction $L\gamma\le\frac12$ does not depend on
+$\beta$---it is the SGD condition with $\alpha$ replaced by $\gamma$---whereas the
+nonconvex analysis needs $L\gamma\le\frac{1-\beta}2$. Convexity lets us bound the
+troublesome inner product $\ip{\nabla f(x_k)}{x_k-x_{k-1}}$ by a difference of function
+values, which telescopes, instead of paying for it with kinetic energy. The extra term
+$\frac{2\beta\Dlt}{(1-\beta)K}$ is the price of momentum; since $\Dlt\le\frac L2D^2$ (descent
+lemma at $x^\star$, where $\nabla f(x^\star)=0$), it is at most
+$\frac{\beta}{1-\beta}\cdot\frac{LD^2}{K}$.
+\end{remark}

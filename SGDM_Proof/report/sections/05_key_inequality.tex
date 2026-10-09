@@ -1,0 +1,279 @@
+% ======================================================================
+\section{The expected decrease inequality for SGDM}\label{sec:master}
+% ======================================================================
+
+We now carry out step \textbf{(T1)} of the template for SGDM. The plan has three steps:
+(1)~run the SGD argument on the extrapolated points $z_k$, which do perform SGD steps
+(\cref{lem:z}), and pay for the fact that the gradient is evaluated at the ``wrong'' point
+$x_k$; (2)~show that the velocity, which controls this payment, is damped by friction;
+(3)~combine the two in a potential.
+
+\subsection{Step 1: descent at the extrapolated point}
+
+\begin{lemma}[Descent at the extrapolated point]\label{lem:z-descent}
+Under \cref{as:smooth,as:unbiased,as:variance}, for every $k\ge0$,
+\begin{equation}\label{eq:z-descent}
+  \Ek\bigl[f(z_{k+1})\bigr]\le f(z_k)-\frac\gamma2\,(1-L\gamma)\norm{\nabla f(x_k)}^2
+  +\frac{L^2\gamma}{2}\norm{z_k-x_k}^2+\frac{L\gamma^2}{2}\sigma^2 .
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+\emph{Descent lemma.} By \cref{lem:z}, $z_{k+1}=z_k-\gamma g_k$. Apply
+\cref{lem:descent} with $x=z_k$ and $y=z_{k+1}$:
+\[
+  f(z_{k+1})\le f(z_k)-\gamma\ip{\nabla f(z_k)}{g_k}+\frac{L\gamma^2}{2}\norm{g_k}^2 .
+\]
+\emph{Conditional expectation.} The point $z_k$ is known at time $k$ (it is computed from
+$x_k$ and $x_{k-1}$), hence so is $\nabla f(z_k)$. By \ref{R:mono}, \ref{R:known} and
+\cref{as:unbiased}, $\Ek\ip{\nabla f(z_k)}{g_k}=\ip{\nabla f(z_k)}{\nabla f(x_k)}$, and by
+\cref{lem:variance}, $\Ek\norm{g_k}^2\le\norm{\nabla f(x_k)}^2+\sigma^2$. Therefore
+\[
+  \Ek[f(z_{k+1})]\le f(z_k)-\gamma\ip{\nabla f(z_k)}{\nabla f(x_k)}
+  +\frac{L\gamma^2}{2}\bigl(\norm{\nabla f(x_k)}^2+\sigma^2\bigr).
+\]
+\emph{The gradient is taken at the wrong point.} By polarization
+(\cref{lem:elementary}(c)) with $a=\nabla f(z_k)$, $b=\nabla f(x_k)$, and then
+$L$-smoothness,
+\begin{align*}
+  -\ip{\nabla f(z_k)}{\nabla f(x_k)}
+  &=\tfrac12\norm{\nabla f(z_k)-\nabla f(x_k)}^2-\tfrac12\norm{\nabla f(z_k)}^2-\tfrac12\norm{\nabla f(x_k)}^2\\
+  &\le\tfrac{L^2}{2}\norm{z_k-x_k}^2-\tfrac12\norm{\nabla f(x_k)}^2,
+\end{align*}
+where we also dropped $-\frac12\norm{\nabla f(z_k)}^2\le0$. Multiply by $\gamma$ and
+insert into the previous display.
+\end{proof}
+
+Compared with SGD (\cref{lem:sgd-step}), the only new term is
+$\frac{L^2\gamma}{2}\norm{z_k-x_k}^2$, the price of evaluating the gradient at $x_k$
+instead of $z_k$. By \eqref{eq:z-minus-x} it equals
+$\frac{L^2\gamma}{2}\bigl(\frac{\beta}{1-\beta}\bigr)^2\norm{v_k}^2$: it is
+\emph{quadratic} in the velocity, hence of higher order in the step size than the
+troublesome inertia term $\beta\ip{\nabla f(x_k)}{v_k}$ of \eqref{eq:naive}, which was
+linear. This is what the change of variables $x_k\mapsto z_k$ buys.
+
+\subsection{Step 2: friction damps the velocity}
+
+\begin{lemma}[Velocity recursion]\label{lem:velocity}
+Under \cref{as:unbiased,as:variance}, for every $k\ge0$,
+\begin{equation}\label{eq:velocity-bound}
+  \Ek\norm{v_{k+1}}^2\le\beta\norm{v_k}^2+(1-\beta)\gamma^2\norm{\nabla f(x_k)}^2+(1-\beta)^2\gamma^2\sigma^2 .
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+By \eqref{eq:velocity}, $v_{k+1}=\beta v_k-\alpha g_k$. Since $v_k$ is known at time $k$,
+its conditional mean is $\Ek[v_{k+1}]=\beta v_k-\alpha\nabla f(x_k)$ (rules \ref{R:lin},
+\ref{R:known} and \cref{as:unbiased}), and $v_{k+1}-\Ek[v_{k+1}]=-\alpha\bigl(g_k-\nabla f(x_k)\bigr)$.
+The variance decomposition (\cref{lem:variance}) and \cref{as:variance} give
+\[
+  \Ek\norm{v_{k+1}}^2=\norm{\beta v_k-\alpha\nabla f(x_k)}^2+\alpha^2\Ek\norm{g_k-\nabla f(x_k)}^2
+  \le\norm{\beta v_k-\alpha\nabla f(x_k)}^2+\alpha^2\sigma^2 .
+\]
+Because $\alpha=(1-\beta)\gamma$, we can write
+$\beta v_k-\alpha\nabla f(x_k)=\beta\,v_k+(1-\beta)\,\bigl(-\gamma\nabla f(x_k)\bigr)$, a convex
+combination. By \cref{lem:elementary}(d) with $\theta=\beta$,
+$\norm{\beta v_k-\alpha\nabla f(x_k)}^2\le\beta\norm{v_k}^2+(1-\beta)\gamma^2\norm{\nabla f(x_k)}^2$.
+Finally $\alpha^2=(1-\beta)^2\gamma^2$.
+\end{proof}
+
+In words: each step, friction keeps only a fraction $\beta$ of the squared velocity, and the
+gradient and the noise inject new velocity.
+
+\subsection{Step 3: the potential and the main inequality}
+
+\begin{tcolorbox}[keybox]
+\begin{theorem}[Expected decrease for SGDM]\label{thm:master}
+Let \cref{as:smooth,as:lower,as:unbiased,as:variance} hold, $\beta\in[0,1)$, $\alpha>0$,
+$\gamma=\alpha/(1-\beta)$, and define
+\begin{equation}\label{eq:potential}
+  \Phi_k:=f(z_k)-\fs+\cb\norm{x_k-x_{k-1}}^2\;\ge0,\qquad \cb:=\frac{L\beta^2}{2(1-\beta)^2}.
+\end{equation}
+\begin{enumerate}[label=\textup{(\alph*)}]
+\item For every $k\ge0$ (no condition on $\alpha$),
+\begin{equation}\label{eq:master-general}
+  \Ek[\Phi_{k+1}]\le\Phi_k
+  -\frac\gamma2\Bigl(1-\frac{L\gamma\,(1-\beta+\beta^2)}{1-\beta}\Bigr)\norm{\nabla f(x_k)}^2
+  -\cb\,(1-\beta-L\gamma)\norm{v_k}^2
+  +\frac{1+\beta^2}{2}\,L\gamma^2\sigma^2 .
+\end{equation}
+\item If $\alpha\le\frac{(1-\beta)^2}{2L}$, equivalently $L\gamma\le\frac{1-\beta}{2}$, then
+for every $k\ge0$,
+\begin{equation}\label{eq:master}
+  \Ek[\Phi_{k+1}]\le\Phi_k-\frac\gamma4\norm{\nabla f(x_k)}^2
+  -\frac{L\beta^2}{4(1-\beta)}\norm{x_k-x_{k-1}}^2+L\gamma^2\sigma^2 .
+\end{equation}
+\end{enumerate}
+\end{theorem}
+\end{tcolorbox}
+
+\begin{proof}
+By \eqref{eq:z-minus-x},
+$\frac{L^2\gamma}{2}\norm{z_k-x_k}^2=\frac{L^2\gamma}{2}\cdot\frac{\beta^2}{(1-\beta)^2}\norm{v_k}^2
+=L\gamma\,\cb\norm{v_k}^2$. Subtracting $\fs$ from \cref{lem:z-descent} therefore gives
+\begin{equation}\label{eq:pf-master-1}
+  \Ek[f(z_{k+1})]-\fs\le f(z_k)-\fs-\frac\gamma2(1-L\gamma)\norm{\nabla f(x_k)}^2
+  +L\gamma\,\cb\norm{v_k}^2+\frac{L\gamma^2}{2}\sigma^2 .
+\end{equation}
+Multiplying \cref{lem:velocity} by $\cb\ge0$ gives
+\begin{equation}\label{eq:pf-master-2}
+  \cb\,\Ek\norm{v_{k+1}}^2\le\cb\beta\norm{v_k}^2+\cb(1-\beta)\gamma^2\norm{\nabla f(x_k)}^2
+  +\cb(1-\beta)^2\gamma^2\sigma^2 .
+\end{equation}
+By linearity \ref{R:lin}, the sum of the left-hand sides is $\Ek[\Phi_{k+1}]$. Adding
+\eqref{eq:pf-master-1} and \eqref{eq:pf-master-2} and grouping terms,
+\begin{align*}
+  \Ek[\Phi_{k+1}]\le f(z_k)-\fs+\cb(\beta+L\gamma)\norm{v_k}^2
+  &-\Bigl[\frac\gamma2(1-L\gamma)-\cb(1-\beta)\gamma^2\Bigr]\norm{\nabla f(x_k)}^2\\
+  &+\Bigl[\frac{L\gamma^2}{2}+\cb(1-\beta)^2\gamma^2\Bigr]\sigma^2 .
+\end{align*}
+We simplify the three coefficients using $\cb=\frac{L\beta^2}{2(1-\beta)^2}$:
+\begin{itemize}
+\item \emph{velocity:} $\cb(\beta+L\gamma)=\cb-\cb(1-\beta-L\gamma)$, so
+  $f(z_k)-\fs+\cb(\beta+L\gamma)\norm{v_k}^2=\Phi_k-\cb(1-\beta-L\gamma)\norm{v_k}^2$;
+\item \emph{gradient:} $\cb(1-\beta)\gamma^2=\frac{L\beta^2\gamma^2}{2(1-\beta)}$, so the bracket equals
+  $\frac\gamma2\bigl(1-L\gamma-\frac{L\gamma\beta^2}{1-\beta}\bigr)
+  =\frac\gamma2\bigl(1-\frac{L\gamma(1-\beta+\beta^2)}{1-\beta}\bigr)$;
+\item \emph{noise:} $\cb(1-\beta)^2\gamma^2=\frac{L\beta^2\gamma^2}{2}$, so the bracket equals
+  $\frac{1+\beta^2}{2}L\gamma^2$.
+\end{itemize}
+This proves (a). For (b), assume $L\gamma\le\frac{1-\beta}{2}$. Then:
+\begin{itemize}
+\item $\frac{L\gamma(1-\beta+\beta^2)}{1-\beta}\le\frac{1-\beta+\beta^2}{2}\le\frac12$
+  (because $\beta^2\le\beta$ for $\beta\in[0,1)$), so the gradient coefficient in (a) is at
+  least $\frac\gamma2\cdot\frac12=\frac\gamma4$;
+\item $1-\beta-L\gamma\ge\frac{1-\beta}2$, so
+  $\cb(1-\beta-L\gamma)\ge\cb\frac{1-\beta}{2}=\frac{L\beta^2}{4(1-\beta)}$;
+\item $\frac{1+\beta^2}{2}\le1$.
+\end{itemize}
+Inserting these three bounds into \eqref{eq:master-general} gives \eqref{eq:master}.
+Finally, $\Phi_k\ge0$ because $f(z_k)\ge\fs$ (\cref{as:lower}).
+\end{proof}
+
+\subsection{Discussion}
+
+\paragraph{Side by side with SGD.} \Cref{tab:side-by-side} compares
+\cref{thm:master}(b) with \cref{lem:sgd-step}. The structure is identical; SGDM measures
+progress with $\Phi_k$ instead of $f(x_k)-\fs$, and $\alpha$ is replaced by the effective
+step size $\gamma$. Both quantities start at the same value, $\Phi_0=f(x_0)-\fs=\Dlt$,
+because $v_0=0$ and $z_0=x_0$.
+
+\begin{table}[ht]
+\centering\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lll@{}}
+\toprule
+ & SGD (\cref{lem:sgd-step}) & SGDM (\cref{thm:master}(b))\\
+\midrule
+measure of progress & $f(x_k)-\fs$ & $\Phi_k=f(z_k)-\fs+\cb\norm{x_k-x_{k-1}}^2$\\
+step-size condition & $\alpha\le1/L$ & $\alpha\le(1-\beta)^2/(2L)$, i.e.\ $\gamma\le(1-\beta)/(2L)$\\
+guaranteed progress & $\frac\alpha2\norm{\nabla f(x_k)}^2$ & $\frac\gamma4\norm{\nabla f(x_k)}^2$ (+ a velocity term)\\
+price of noise & $\frac L2\alpha^2\sigma^2$ & $L\gamma^2\sigma^2$\\
+value at $k=0$ & $\Dlt$ & $\Dlt$\\
+\bottomrule
+\end{tabular}
+\caption{The expected decrease inequalities for SGD and SGDM.}
+\label{tab:side-by-side}
+\end{table}
+
+\begin{tcolorbox}[intuition,title=Where the step-size condition comes from: an energy budget]
+The potential contains a kinetic energy $\cb\norm{v_k}^2$. In each step friction removes
+the fraction $1-\beta$ of it (\cref{lem:velocity} keeps only $\beta\norm{v_k}^2$), which
+releases $\cb(1-\beta)\norm{v_k}^2$. Evaluating the gradient at the wrong point costs
+$L\gamma\,\cb\norm{v_k}^2$ (\cref{lem:z-descent}). The budget balances exactly when
+\[
+  L\gamma<1-\beta\qquad\Longleftrightarrow\qquad\alpha<\frac{(1-\beta)^2}{L}:
+\]
+\emph{friction must dissipate kinetic energy faster than the gradient mismatch creates
+error.} This is visible in \eqref{eq:master-general}: if $L\gamma<1-\beta$, both the
+velocity coefficient and the gradient coefficient are positive (for the latter note that
+$\frac{L\gamma(1-\beta+\beta^2)}{1-\beta}<1-\beta+\beta^2\le1$), so without noise
+$\Phi_k$ strictly decreases until $x_k$ is stationary with zero velocity. Condition (b)
+keeps half of the friction as a safety margin, which produces the clean constants. As
+$\beta\to1$ the friction vanishes, and so does the admissible step.
+\end{tcolorbox}
+
+\begin{remark}[The case $\beta=0$]
+For $\beta=0$ we have $\cb=0$, $z_k=x_k$, $\Phi_k=f(x_k)-\fs$, and
+\eqref{eq:master-general} reads
+$\Ek[f(x_{k+1})]\le f(x_k)-\frac\gamma2(1-L\gamma)\norm{\nabla f(x_k)}^2+\frac{L\gamma^2}{2}\sigma^2$:
+this is \cref{lem:sgd-step} with a progress term smaller by about a factor $2$, the price of
+discarding $-\frac12\norm{\nabla f(z_k)}^2$ in the polarization step. Constants in this
+report are chosen for simplicity and are not optimized.
+\end{remark}
+
+\begin{remark}[Why both parts of the potential are needed]
+Without the kinetic term, \eqref{eq:pf-master-1} leaves a positive term
+$L\gamma\cb\norm{v_k}^2$ that $f(z_k)$ cannot absorb; adding $\cb\norm{v_k}^2$ and
+\cref{lem:velocity} turns it into a decrease. Conversely, a potential built on $f(x_k)$
+instead of $f(z_k)$ must absorb the first-order inertia term of \eqref{eq:naive}; this works
+without noise (\cref{prop:energy}) but not with noise (\cref{rem:energy-noise}).
+\end{remark}
+
+\begin{corollary}[When does one step decrease the potential?]\label{cor:when-decrease}
+Under the assumptions of \cref{thm:master}(b), $\Ek[\Phi_{k+1}]<\Phi_k$ whenever
+\[
+  \frac\gamma4\norm{\nabla f(x_k)}^2+\frac{L\beta^2}{4(1-\beta)}\norm{x_k-x_{k-1}}^2>L\gamma^2\sigma^2,
+  \qquad\text{in particular whenever}\qquad \norm{\nabla f(x_k)}^2>4L\gamma\sigma^2 .
+\]
+Without noise ($\sigma=0$), $\Phi_k$ is non-increasing along every trajectory.
+For comparison, SGD with $\alpha\le1/L$ decreases $f$ in expectation whenever
+$\norm{\nabla f(x_k)}^2>L\alpha\sigma^2$.
+\end{corollary}
+
+\begin{proof}
+Immediate from \eqref{eq:master} (and from \cref{lem:sgd-step} for SGD).
+\end{proof}
+
+So the circumstances under which SGDM makes progress \emph{in a single step} are the same
+as for SGD: the signal $\norm{\nabla f(x_k)}^2$ must exceed the noise level, here
+$4L\gamma\sigma^2$; outside this ``noise region'' the potential decreases in expectation,
+inside it the noise can push it up. Shrinking $\gamma$ shrinks the noise region.
+
+The potential also controls the function value at the actual iterate:
+
+\begin{lemma}[The potential controls $f(x_k)$]\label{lem:phi-controls-f}
+Under \cref{as:smooth,as:lower}, for all $x,z\in\R^d$,
+\begin{equation}\label{eq:f-two-points}
+  f(x)-\fs\le2\bigl(f(z)-\fs\bigr)+L\norm{x-z}^2 .
+\end{equation}
+Consequently the SGDM iterates satisfy $f(x_k)-\fs\le2\,\Phi_k$ for all $k\ge0$.
+\end{lemma}
+
+\begin{proof}
+By the descent lemma with base point $z$, and Young's inequality
+(\cref{lem:elementary}(b) with $\rho=1/L$),
+\[
+  f(x)\le f(z)+\ip{\nabla f(z)}{x-z}+\frac L2\norm{x-z}^2
+  \le f(z)+\frac{1}{2L}\norm{\nabla f(z)}^2+L\norm{x-z}^2 .
+\]
+By \cref{lem:grad-gap}, $\frac1{2L}\norm{\nabla f(z)}^2\le f(z)-\fs$; subtracting $\fs$
+gives \eqref{eq:f-two-points}. For the iterates take $x=x_k$, $z=z_k$: by
+\eqref{eq:z-minus-x}, $L\norm{x_k-z_k}^2=\frac{L\beta^2}{(1-\beta)^2}\norm{v_k}^2=2\cb\norm{v_k}^2$,
+so $f(x_k)-\fs\le2(f(z_k)-\fs)+2\cb\norm{v_k}^2=2\Phi_k$.
+\end{proof}
+
+Without noise and under \cref{thm:master}(b), this gives $f(x_k)-\fs\le2\Phi_k\le2\Phi_0=2\Dlt$:
+the function value may go up (\cref{fig:potential}(b)), but never above
+$\fs+2\bigl(f(x_0)-\fs\bigr)$.
+
+\begin{remark}[Two extensions]\label{rem:extensions}
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=2em]
+\item \emph{Varying step sizes.} Suppose Algorithm~1 uses $\alpha_k$ at iteration $k$
+  (heavy-ball form) and set $\gamma_k=\alpha_k/(1-\beta)$. Each ingredient of the proof of
+  \cref{thm:master} is a statement about a single iteration---\cref{lem:z} holds with
+  $\gamma_k$ by \cref{rem:varying}, and \cref{lem:z-descent,lem:velocity} only involve
+  step $k$---and the weight $\cb$ does not depend on the step size. Hence
+  \eqref{eq:master} holds at iteration $k$ with $\gamma_k$ in place of $\gamma$ whenever
+  $L\gamma_k\le\frac{1-\beta}{2}$, with the \emph{same} potential $\Phi_k$.
+\item \emph{Noise that grows with the gradient.} If \cref{as:variance} is replaced by
+  $\Ek\norm{g_k-\nabla f(x_k)}^2\le\sigma^2+M\norm{\nabla f(x_k)}^2$ for some $M\ge0$, then
+  \eqref{eq:master} still holds provided $\alpha\le\frac{(1-\beta)^2}{2L(1+M)}$. Indeed,
+  the only changes in the proof are $\Ek\norm{g_k}^2\le(1+M)\norm{\nabla f(x_k)}^2+\sigma^2$
+  in \cref{lem:z-descent} and an extra $\alpha^2M\norm{\nabla f(x_k)}^2$ in
+  \cref{lem:velocity}; the gradient coefficient becomes
+  $\frac\gamma2\bigl[1-L\gamma(1+M)-\frac{L\gamma\beta^2}{1-\beta}(1+(1-\beta)M)\bigr]
+  \ge\frac\gamma2\bigl[1-\frac{1-\beta}{2}-\frac{\beta^2}{2}\bigr]\ge\frac\gamma4$ when
+  $L\gamma(1+M)\le\frac{1-\beta}{2}$, and the other coefficients are unchanged.
+\end{enumerate}
+\end{remark}

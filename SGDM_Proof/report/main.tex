@@ -1,0 +1,122 @@
+\documentclass[11pt]{article}
+
+% ------------------------------------------------------------------
+% Packages
+% ------------------------------------------------------------------
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{graphicx}
+\usepackage{booktabs,array,tabularx}
+\usepackage{enumitem}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage[titles]{tocloft}
+\setlength{\cftbeforesecskip}{0.5em}
+\usepackage[colorlinks=true,linkcolor=RoyalBlue,citecolor=OliveGreen,urlcolor=RoyalBlue]{hyperref}
+\usepackage[capitalise,nameinlink,noabbrev]{cleveref}
+
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=2pt,topsep=4pt}
+\numberwithin{equation}{section}
+\setlength{\parskip}{3pt}
+
+% ------------------------------------------------------------------
+% Theorem-like environments (one shared counter per section)
+% ------------------------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{assumption}{Assumption}
+\renewcommand{\theassumption}{A\arabic{assumption}}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\crefname{assumption}{Assumption}{Assumptions}
+
+% Boxes for the key statements
+\tcbset{keybox/.style={enhanced,breakable,colback=RoyalBlue!4,colframe=RoyalBlue!60!black,
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt}}
+\tcbset{intuition/.style={enhanced,breakable,colback=Goldenrod!8,colframe=Goldenrod!70!black,
+  boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=3pt,bottom=3pt,fonttitle=\bfseries\small,
+  coltitle=black,colbacktitle=Goldenrod!25}}
+
+% ------------------------------------------------------------------
+% Notation
+% ------------------------------------------------------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ek}{\mathbb{E}_k}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\Norm}[1]{\bigl\lVert #1\bigr\rVert}
+\newcommand{\ip}[2]{\langle #1,\, #2\rangle}
+\newcommand{\fs}{f^\star}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\Dlt}{\Delta}
+\newcommand{\cb}{c_\beta}
+\newcommand{\ie}{i.e.,\ }
+\newcommand{\eg}{e.g.,\ }
+
+\hypersetup{pdftitle={Convergence of Stochastic Gradient Descent with Momentum},
+  pdfsubject={Expected-decrease analysis of SGD with momentum (stochastic heavy ball)},
+  pdfkeywords={SGD, momentum, heavy ball, Lyapunov function, nonconvex optimization, convergence}}
+
+\title{\textbf{Convergence of Stochastic Gradient Descent with Momentum}\\[4pt]
+  \large An expected-decrease analysis in the style of SGD, with complete proofs,\\
+  and a map of when convergence holds}
+\author{SGDM\_Proof project}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+Stochastic gradient descent with momentum (SGDM, also called the stochastic heavy-ball
+method) is a default optimizer in machine learning, yet its convergence proof is far less
+familiar than the textbook proof for plain SGD. The obstacle is that momentum lets the
+iterates overshoot, so the function value $f(x_k)$ need not decrease---not even in
+expectation, and not even without noise. This report shows how to recover an SGD-style
+\emph{expected decrease inequality} for SGDM by measuring progress with a
+potential that combines the function value at an extrapolated point with a kinetic-energy
+term. From this single inequality we derive, with every step written out:
+(i)~convergence to stationary points of smooth nonconvex functions at the same
+$O(1/\sqrt{K})$ rate as SGD; (ii)~convergence with diminishing step sizes; (iii)~linear
+convergence up to a noise floor, and an $O(1/k)$ rate with decaying steps, under the
+Polyak--{\L}ojasiewicz condition; and (iv)~an $O(1/\sqrt{K})$ rate for convex functions
+under a milder step-size condition. We then map out \emph{when} these guarantees hold: we
+compute the noise floor exactly on quadratics, derive the exact stability region of the
+heavy-ball method on quadratics, prove that without noise a mechanical energy decreases for
+every smooth function when $\alpha<2(1-\beta)/L$, and verify by hand a classical
+counterexample in which momentum parameters tuned for quadratics make the method cycle on a
+strongly convex function. Numerical experiments illustrate each statement. Only
+multivariable calculus, linear algebra and basic probability are assumed.
+\end{abstract}
+
+\newpage
+{\small\setlength{\parskip}{0pt}\tableofcontents}
+\newpage
+
+\input{sections/01_introduction}
+\input{sections/02_preliminaries}
+\input{sections/03_sgd}
+\input{sections/04_momentum}
+\input{sections/05_key_inequality}
+\input{sections/06_convergence}
+\input{sections/07_circumstances}
+\input{sections/08_experiments}
+\input{sections/09_conclusion}
+
+\appendix
+\input{sections/10_appendix}
+
+\input{sections/references}
+
+\end{document}
